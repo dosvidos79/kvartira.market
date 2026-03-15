@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { Prisma } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+
+type MessageWithRelations = Prisma.MessageGetPayload<{
+  include: {
+    sender: { select: { id: true; name: true; email: true } }
+    receiver: { select: { id: true; name: true; email: true } }
+  }
+}>
 
 export async function GET() {
   try {
@@ -50,7 +58,7 @@ export async function GET() {
       unreadCount: number
     }>()
 
-    messages.forEach((message) => {
+    messages.forEach((message: MessageWithRelations) => {
       const otherUser = message.senderId === session.user.id
         ? message.receiver
         : message.sender
